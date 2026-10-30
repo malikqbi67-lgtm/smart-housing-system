@@ -85,4 +85,6 @@ while True:
     print("Warning:", warning_count)
     print("Critical:", critical_count)
 
+    save_readings(rooms)
+
     time.sleep(3)

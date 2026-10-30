@@ -21,7 +21,7 @@ room2 = {
 }
 room3 = {
     "room_id": 103,
-    "temperature": 25,
+    "temperature": 40,
     "humidity": 50,
     "electricity": 1.0
 }
@@ -67,3 +67,25 @@ if rooms_with_warnings == 0:
     print("Building condition: NORMAL")
 else:
     print("Building condition: WARNING")
+    print("--- Room Status ---")
+
+normal_count = 0
+warning_count = 0
+critical_count = 0
+
+for room in rooms:
+    if room["temperature"] >= 40:
+        status = "CRITICAL"
+        critical_count += 1
+    elif room["temperature"] > 35 or room["humidity"] > 70 or room["electricity"] > 4:
+        status = "WARNING"
+        warning_count += 1
+    else:
+        status = "NORMAL"
+        normal_count += 1
+
+    print("Room", room["room_id"], ":", status)
+
+print("Normal:", normal_count)
+print("Warning:", warning_count)
+print("Critical:", critical_count)

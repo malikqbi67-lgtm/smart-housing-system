@@ -1,3 +1,6 @@
+import json
+from datetime import datetime
+
 import random
 import time
 
@@ -13,6 +16,17 @@ def generate_room(room_id):
         "electricity": round(random.uniform(0.5, 8), 1)
     }
     return room
+def save_readings(new_readings):
+    try:
+        with open("data/history.json", "r") as f:
+            history = json.load(f)
+    except FileNotFoundError:
+        history = []
+
+    history.extend(new_readings)
+
+    with open("data/history.json", "w") as f:
+        json.dump(history, f, indent=2)
 
 while True:
     rooms = [generate_room(101), generate_room(102), generate_room(103)]
@@ -63,6 +77,8 @@ while True:
         else:
             status = "NORMAL"
             normal_count += 1
+        room["status"] = status
+        room["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print("Room", room["room_id"], ":", status)
 
     print("Normal:", normal_count)

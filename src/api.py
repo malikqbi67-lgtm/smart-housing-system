@@ -44,3 +44,66 @@ def get_room(room_id: int):
     if row is None:
         raise HTTPException(status_code=404, detail="Room not found")
     return dict(row)
+@app.get("/alerts")
+def get_alerts():
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT * FROM readings
+        WHERE id IN (SELECT MAX(id) FROM readings GROUP BY room_id)
+        AND status != 'NORMAL'
+        ORDER BY room_id
+    """).fetchall()
+    conn.close()
+
+    alerts = []
+    for row in rows:
+        reasons = []
+        if row["temperature"] > 35:
+            reasons.append("HIGH TEMPERATURE")
+        if row["humidity"] > 70:
+            reasons.append("HIGH HUMIDITY")
+        if row["electricity"] > 4:
+            reasons.append("HIGH ELECTRICITY USAGE")
+        alerts.append({
+            "room_id": row["room_id"],
+            "status": row["status"],
+            "reasons": reasons,
+            "timestamp": row["timestamp"]
+        })
+    return alerts
+
+
+@app.get("/building/status")
+def get_building_status():
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT * FROM readings
+        WHERE id IN (SELECT MAX(id) FROM readings GROUP BY room_id)
+    """).fetchall()
+    conn.close()
+
+    total = len(rows)
+    if total == 0:
+        return {"message": "No readings yet"}
+
+    normal = sum(1 for r in rows if r["status"] == "NORMAL")
+    warning = sum(1 for r in rows if r["status"] == "WARNING")
+    critical = sum(1 for r in rows if r["status"] == "CRITICAL")
+    avg_temp = round(sum(r["temperature"] for r in rows) / total, 2)
+
+    if critical > 0:
+        condition = "CRITICAL"
+    elif warning > 0:
+        condition = "WARNING"
+    else:
+        condition = "NORMAL"
+
+    return {
+        "building": "Smart Housing Building",
+        "total_rooms": total,
+        "average_temperature": avg_temp,
+        "normal": normal,
+        "warning": warning,
+        "critical": critical,
+        "condition": condition
+    }

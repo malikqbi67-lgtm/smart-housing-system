@@ -1,7 +1,15 @@
+import random
 building = {
     "name": "Smart Housing Building"
 }
-
+def generate_room(room_id):
+    room = {
+        "room_id": room_id,
+        "temperature": random.randint(20, 45),
+        "humidity": random.randint(30, 90),
+        "electricity": round(random.uniform(0.5, 8), 1)
+    }
+    return room
 room1 = {
     "room_id": 101,
     "temperature": 27,
@@ -10,7 +18,7 @@ room1 = {
 }
 
 print(building["name"])
-print(room1)
+
 
 room2 = {
     "room_id": 102,
@@ -25,7 +33,7 @@ room3 = {
     "humidity": 50,
     "electricity": 1.0
 }
-rooms = [room1, room2, room3]
+rooms = [generate_room(101), generate_room(102), generate_room(103)]
 
 for room in rooms:
     print(room)

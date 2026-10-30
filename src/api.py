@@ -1,7 +1,16 @@
 import sqlite3
 from fastapi import FastAPI
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def get_connection():
     conn = sqlite3.connect("data/building.db")
@@ -13,10 +22,10 @@ def home():
     return {"message": "Smart Housing API is running"}
 
 @app.get("/readings")
-def get_readings():
+def get_readings(limit: int = 60):
     conn = get_connection()
     rows = conn.execute(
-        "SELECT * FROM readings ORDER BY id DESC LIMIT 10"
+        "SELECT * FROM readings ORDER BY id DESC LIMIT ?", (limit,)
     ).fetchall()
     conn.close()
     return [dict(row) for row in rows]

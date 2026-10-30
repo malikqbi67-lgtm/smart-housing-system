@@ -1,4 +1,5 @@
 import json
+import sqlite3
 from datetime import datetime
 
 import random
@@ -16,6 +17,34 @@ def generate_room(room_id):
         "electricity": round(random.uniform(0.5, 8), 1)
     }
     return room
+def init_db():
+    conn = sqlite3.connect("data/building.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS readings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            room_id INTEGER,
+            temperature INTEGER,
+            humidity INTEGER,
+            electricity REAL,
+            status TEXT,
+            timestamp TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def save_to_db(new_readings):
+    conn = sqlite3.connect("data/building.db")
+    cursor = conn.cursor()
+    for r in new_readings:
+        cursor.execute(
+            "INSERT INTO readings (room_id, temperature, humidity, electricity, status, timestamp) VALUES (?, ?, ?, ?, ?, ?)",
+            (r["room_id"], r["temperature"], r["humidity"], r["electricity"], r["status"], r["timestamp"])
+        )
+    conn.commit()
+    conn.close()
+
 def save_readings(new_readings):
     try:
         with open("data/history.json", "r") as f:
@@ -27,6 +56,8 @@ def save_readings(new_readings):
 
     with open("data/history.json", "w") as f:
         json.dump(history, f, indent=2)
+
+init_db()
 
 while True:
     rooms = [generate_room(101), generate_room(102), generate_room(103)]
@@ -86,5 +117,6 @@ while True:
     print("Critical:", critical_count)
 
     save_readings(rooms)
+    save_to_db(rooms)
 
     time.sleep(3)
